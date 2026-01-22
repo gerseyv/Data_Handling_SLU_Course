@@ -1,0 +1,194 @@
+---
+title: "Practice_dplyr"
+format: html
+editor: visual
+---
+
+
+
+```{r}
+install.packages("gapminder")  # install the package
+library(gapminder)               # load the data
+str(gapminder)   # see the data structure
+library("dplyr")
+```
+Select function
+
+```{r}
+year_country_gdp <- select(gapminder, year, country, gdpPercap) # keep only certain columns
+smaller_gapminder_data <- select(gapminder, -continent) # remove continent variable
+
+#using pipes
+year_country_gdp <- gapminder %>%  # use pipe
+  select(year, country, gdpPercap) # select few columns
+tidy_gdp <- year_country_gdp %>% 
+  rename(gdp_per_capita = gdpPercap)  # rename a variable name or column name
+year_country_gdp_euro <- gapminder %>%
+    filter(continent == "Europe") %>%  # keep observation (rows) that have Europe
+    select(year, country, gdpPercap)   # keep variables
+
+europe_lifeExp_2007 <- gapminder %>%
+  filter(continent == "Europe", year == 2007) %>% # now take observation that have Europe & 2007
+  select(country, lifeExp)
+
+#Selecting for African countries for lifeExp, country and year
+year_country_gdp_afr <- gapminder %>% 
+  filter(continent == "Africa") %>% 
+  select(-pop, -gdpPercap)
+head(year_country_gdp_afr)
+nrow(year_country_gdp_afr)
+
+gdp_bycontinents <- gapminder %>%
+    group_by(continent) %>%
+    summarize(mean_gdpPercap = mean(gdpPercap), SD_gdpPercap = sd(gdpPercap), cov_gdpPercap = sd(gdpPercap)/mean(gdpPercap)*100)
+#coefficient of variance would be relative to the mean how much does the data vary
+gdp_bycontinents
+
+```
+Life expectancy per country
+
+Which has the longest average life expectancy and which has the shortest average life expectancy?
+```{r}
+lifeexp_country <- gapminder %>% 
+  group_by(country) %>% 
+  summarize(mean_life = mean(lifeExp))
+lifeexp_country %>% 
+  filter(mean_life == max(mean_life) | mean_life == min(mean_life))
+#Iceland has the highest mean life expectancy and Sierra Leone has the lowest
+
+#another way of doing it is through arrange
+lifeexp_country %>%
+   arrange(mean_life) %>%        # sort
+   head(1) # shows the min
+lifeexp_country %>%
+   arrange(desc(mean_life)) %>%  # arrange in decentralizing jon
+   head(1) # shows the max
+
+```
+Grouping by multiple variables
+
+```{r}
+
+gdp_bycontinents_byyear <- gapminder %>%
+    group_by(continent, year) %>%
+    summarize(mean_gdpPercap = mean(gdpPercap))
+
+head(gdp_bycontinents_byyear)
+
+gdp_pop_bycontinents_byyear <- gapminder %>%
+    group_by(continent, year) %>%
+    summarize(mean_gdpPercap = mean(gdpPercap),
+              sd_gdpPercap = sd(gdpPercap),     # calculate standard deviation
+              mean_pop = mean(pop),             # calculate average
+              sd_pop = sd(pop))
+
+head(gdp_pop_bycontinents_byyear)
+
+gapminder %>%
+    filter(year == 2002) %>%
+    count(continent, sort = TRUE)    # do counting of represented countries in each continent
+
+gapminder %>%
+    group_by(continent) %>%
+    summarize(se_le = sd(lifeExp)/sqrt(n()))   # calculate standard error
+#n() returns the total number of observations in the current group rather than counting the number of observations in each group within a specific column.
+
+gapminder %>%
+    group_by(continent) %>%
+    summarize(
+      mean_le = mean(lifeExp),
+      min_le = min(lifeExp),
+      max_le = max(lifeExp),
+      se_le = sd(lifeExp)/sqrt(n()))
+
+```
+
+Using mutate
+
+```{r}
+gdp_pop_bycontinents_byyear <- gapminder %>%
+    mutate(gdp_billion = gdpPercap*pop/10^9) %>% #create new variables prior to (or even after) summarizing information 
+    group_by(continent,year) %>%
+    summarize(mean_gdpPercap = mean(gdpPercap),
+              sd_gdpPercap = sd(gdpPercap),
+              mean_pop = mean(pop),
+              sd_pop = sd(pop),
+              mean_gdp_billion = mean(gdp_billion),
+              sd_gdp_billion = sd(gdp_billion))
+
+head(gdp_pop_bycontinents_byyear)
+
+## keeping all data but "filtering" after a certain condition
+# calculate GDP only for people with a life expectation above 25
+gdp_pop_bycontinents_byyear_above25 <- gapminder %>%
+    mutate(gdp_billion = ifelse(lifeExp > 25,                    # life expectation above 25
+                                gdpPercap * pop / 10^9, NA)) %>% #  GDP (in billions)
+    group_by(continent, year) %>%
+    summarize(mean_gdpPercap = mean(gdpPercap),
+              sd_gdpPercap = sd(gdpPercap),
+              mean_pop = mean(pop),
+              sd_pop = sd(pop),
+              mean_gdp_billion = mean(gdp_billion),
+              sd_gdp_billion = sd(gdp_billion))
+
+## updating only if certain condition is fullfilled
+# for life expectations above 40 years, the gpd to be expected in the future is scaled
+gdp_future_bycontinents_byyear_high_lifeExp <- gapminder %>%
+    mutate(gdp_futureExpectation = ifelse(lifeExp > 40, 
+                                          gdpPercap * 1.5, 
+                                          gdpPercap)) %>%
+    group_by(continent, year) %>%
+    summarize(mean_gdpPercap = mean(gdpPercap),
+              mean_gdpPercap_expected = mean(gdp_futureExpectation))
+
+head(gdp_future_bycontinents_byyear_high_lifeExp)
+
+```
+
+Combine with ggplot
+
+```{r}
+library("ggplot2")
+
+gdp_future_bycontinents_byyear_high_lifeExp %>% 
+  ggplot(mapping = aes(x = year, y = mean_gdpPercap, group = continent, colour = continent)) + 
+  geom_line() 
+
+gapminder %>%
+  # Filter countries located in the Americas
+  filter(continent == "Americas") %>%
+  # Make the plot
+  ggplot(mapping = aes(x = year, y = lifeExp)) + # set x and y
+  geom_line() +                                  # line plot
+  facet_wrap( ~ country) +                       # split the plot by country
+  theme(axis.text.x = element_text(angle = 45))  # x axis labels at 45 degree angle
+
+gapminder %>%
+  # extract first letter of country name into new column
+  mutate(startsWith = substr(country, 1, 1)) %>% #takes part of a character vector, starts at the 1st character and ends at the 1st character
+  # only keep countries starting with A or Z
+  filter(startsWith %in% c("A", "Z")) %>%
+  # plot lifeExp into facets
+  ggplot(aes(x = year, y = lifeExp, colour = continent)) +  # x and y and set color
+  geom_line() +                                             # line plot
+  facet_wrap(vars(country)) +                               # faceting variables 
+  theme_minimal()                                           # set theme
+
+ave_life_2002 <- gapminder %>% 
+  filter(year == 2002) %>% 
+  group_by(continent) %>% 
+  sample_n(2) %>% #selects two observations from each group
+  summarise(mean_life = mean(lifeExp)) %>% 
+  arrange(desc(continent))
+
+ave_life_2002
+
+ave_life_2002 %>% 
+  ggplot(aes(x= continent, y=mean_life)) +
+  geom_bar(stat = "identity")
+
+
+```
+
+
+
