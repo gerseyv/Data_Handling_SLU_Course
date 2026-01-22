@@ -1,10 +1,23 @@
 ---
-title: "Practice_ggplot2"
-format: html
+title: "Practice 2 with ggplot"
+author: "Gersey Vargas"
+date: "01/22/2026"
+format: html 
+fig-width: 8
+fig-height: 4
+code-fold: true
 editor: visual
+theme: "pulse"
 ---
+# First exercise: Iris dataset
+
+For this exercise we used the iris dataset to make a scatter plot showing the relationship between petal length and width of the three species: *Iris setosa*, *I. versicolor* and *I. virginica*.
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
+setwd("C:/GerseyNotSLU/Datahandlingcourse/")
 library(dplyr)
 library(tidyr)
 library(stringr)
@@ -12,73 +25,110 @@ library(ggplot2)
 library(ggrepel)
 library(patchwork)
 data("iris")
-head(iris)
 
+#We created a new theme changing the color of the text for the plot
 newtheme <- theme(
     axis.title=element_text(color="Blue",face="bold"),
-    plot.title=element_text(color="Green",face="bold"),
+    plot.title=element_text(color="Blue",face="bold"),
     plot.subtitle=element_text(color="Pink"),
     panel.grid=element_blank())
 
+#The ggplot
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
-  geom_point(aes(color=Sepal.Width))+
+  geom_point()+
   geom_smooth(method="lm")+
-  scale_color_continuous(name="New Legend Title")+ #gradient color
+  #scale_color_continuous(name="New Legend Title")+ #gradient color
   scale_x_continuous(breaks=1:8)+ #breaks in x-axis
-  labs(title="This Is A Title",subtitle="This is a subtitle",x=" Petal Length", 
-       y="Petal Width", caption="This is a little caption.")+
+  labs(title="Petal length and width relationship",subtitle="Comparison of three Iris species",x=" Petal Length", 
+       y="Petal Width", caption="This is where a little caption would go.")+
   facet_wrap(~Species)+
   theme_bw()+
   newtheme
 
 ```
 
-Playing with the legend
+## We also played with the legend in various ways:
+
+Having two legends.
 
 ```{r}
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species,size=Sepal.Width)) #two legends
 
+```
+
+One legends.
+
+```{r}
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species,size=Sepal.Width))+
   guides(size="none") #removes the last legend
+```
 
+No legends.
+
+```{r}
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species,size=Sepal.Width),show.legend=FALSE) #removes all legends
+```
 
+Legend on the top.
+
+```{r}
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species,size=Sepal.Width))+
   theme(legend.position="top",
         legend.justification="right") #legend on top
+```
 
+Legend on the top but organized into columns.
+
+```{r}
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species,size=Sepal.Width))+
   guides(size=guide_legend(nrow=2,byrow=TRUE),
          color=guide_legend(nrow=3,byrow=T))+
   theme(legend.position="top",
         legend.justification="right") #legend on top but organized in columns
+```
 
+We can also add labels to the points.
+
+```{r}
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species))+
   geom_text(aes(label=Species,hjust=0),nudge_x=0.5,size=3) #add labels to points
+```
 
+Add background to the point labels.
+
+```{r}
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species))+
   geom_label(aes(label=Species,hjust=0),nudge_x=0.5,size=3) #add background to labels
+```
 
+Remove overlapping labels.
+
+```{r}
+#| message: false
+#| warning: false
 library(ggrepel)
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species))+
   geom_text_repel(aes(label=Species),size=3) #repel labels
+```
 
+Also add random text and shapes.
+
+```{r}
 ggplot(data=iris,mapping=aes(x=Petal.Length,y=Petal.Width))+
   geom_point(aes(color=Species))+
   annotate("text",x=2.5,y=2.1,label="There is a random line here")+
   annotate("segment",x=2,xend=4,y=1.5,yend=2) #add random text and shapes
-
 ```
 
-Error bars
+And lastly we can add error bars to the means.
 
 ```{r}
 dfr <- iris %>% group_by(Species) %>% 
@@ -91,9 +141,13 @@ ggplot(data=dfr,mapping=aes(x=Species,y=mean,color=Species))+
 
 ```
 
-Exercise 2 Economist scatterplot
+# Exercise 2 Economist scatterplot
 
 ```{r}
+#| eval: false
+#| message: false
+#| warning: false
+#| include: false
 
 ec <- read.csv("data_economist.csv",header=T)
 head(ec)
@@ -164,11 +218,14 @@ p+theme(panel.grid.minor=element_blank(),
 
 ```
 
-Full code for same graph
+For this exercise we used data from different countries to look at the relationship between the Corruption Perceptions Index and Human Development Index in 2011.
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
 # read data
-ec <- read.csv("assets/data_economist.csv",header=T)
+ec <- read.csv("C:/GerseyNotSLU/Datahandlingcourse/data_economist.csv",header=T)
 # refactor
 ec$Region <- factor(ec$Region,
                     levels = c("EU W. Europe","Americas","Asia Pacific",
@@ -213,10 +270,16 @@ p1
 
 ```
 
-Heatmap exercise
+# Last exercise: Measles heatmap in the US
+
+Lastly, we made a heatmap to look at how the cases of measles changed over time in the 51 states of the US from 1930 to 2000. The lighter blue the squares the lower the case number. You can see how the cases dropped significantly after the vaccine was introduced.  
 
 ```{r}
-me <- read.csv("data_wsj.csv",header=T,stringsAsFactors=F,skip=2)
+#| eval: false
+#| message: false
+#| warning: false
+#| include: false
+me <- read.csv("C:/GerseyNotSLU/Datahandlingcourse/data_wsj.csv",header=T,stringsAsFactors=F,skip=2)
 head(me)
 str(me)
 me1 <- me %>% gather(key=state,value=value,-YEAR,-WEEK) #gather() converts the wide format to long format in dplyr 
@@ -273,15 +336,16 @@ p+theme_minimal(base_family="Gidole")+
 
 ```
 
-Full code continuous for heatmap
-
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
 
 # custom summing function
 fun1 <- function(x) ifelse(all(is.na(x)),NA,sum(x,na.rm=TRUE))
 
 # read data
-me3 <- read.csv("assets/data_wsj.csv",header=T,
+me3 <- read.csv("C:/GerseyNotSLU/Datahandlingcourse/data_wsj.csv",header=T,
                stringsAsFactors=F,skip=2) %>%
         gather(key=state,value=value,-YEAR,-WEEK) %>%
         mutate(value=str_replace(value,"^-$",NA_character_),
@@ -312,19 +376,17 @@ p <- ggplot(me3,aes(x=year,y=reorder(state,desc(state)),fill=total))+
       coord_fixed()+
       geom_segment(x=1963,xend=1963,y=0,yend=51.5,size=.9) +
       annotate("text",label="Vaccine introduced",x=1963,y=53, 
-               vjust=1,hjust=0,size=I(3),family="Gidole")+
-      theme_minimal(base_family="Gidole")+
-      theme(legend.position=c(.5,-.13),
+               vjust=1,hjust=0,size=I(3),family="Gidole")
+
+p+theme_minimal(base_family="Gidole")+
+  theme(legend.position="bottom",
+        legend.justification="center",
         legend.direction="horizontal",
         legend.text=element_text(color="grey20"),
-        plot.margin=grid::unit(c(.5,0,1.5,0),"cm"),
         axis.text.y=element_text(size=6,hjust=1,vjust=0.5),
         axis.text.x=element_text(size=8),
         axis.ticks.y=element_blank(),
-        panel.grid=element_blank(),
         title=element_text(hjust=-.07,vjust=1),
         panel.grid=element_blank())
 
 ```
-
-
