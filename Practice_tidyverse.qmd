@@ -126,6 +126,3 @@ gap_wide <- as_tibble(gap_wide)
 all.equal(gap_wide, gap_wide_betterID)
 
 ```
-
-
-

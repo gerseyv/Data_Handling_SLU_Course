@@ -9,6 +9,7 @@ code-fold: true
 editor: visual
 theme: "pulse"
 ---
+
 # First exercise: Iris dataset
 
 For this exercise we used the iris dataset to make a scatter plot showing the relationship between petal length and width of the three species: *Iris setosa*, *I. versicolor* and *I. virginica*.
@@ -272,7 +273,7 @@ p1
 
 # Last exercise: Measles heatmap in the US
 
-Lastly, we made a heatmap to look at how the cases of measles changed over time in the 51 states of the US from 1930 to 2000. The lighter blue the squares the lower the case number. You can see how the cases dropped significantly after the vaccine was introduced.  
+Lastly, we made a heatmap to look at how the cases of measles changed over time in the 51 states of the US from 1930 to 2000. The lighter blue the squares the lower the case number. You can see how the cases dropped significantly after the vaccine was introduced.
 
 ```{r}
 #| eval: false

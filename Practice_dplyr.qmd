@@ -4,14 +4,13 @@ format: html
 editor: visual
 ---
 
-
-
 ```{r}
 install.packages("gapminder")  # install the package
 library(gapminder)               # load the data
 str(gapminder)   # see the data structure
 library("dplyr")
 ```
+
 Select function
 
 ```{r}
@@ -45,9 +44,11 @@ gdp_bycontinents <- gapminder %>%
 gdp_bycontinents
 
 ```
+
 Life expectancy per country
 
 Which has the longest average life expectancy and which has the shortest average life expectancy?
+
 ```{r}
 lifeexp_country <- gapminder %>% 
   group_by(country) %>% 
@@ -65,6 +66,7 @@ lifeexp_country %>%
    head(1) # shows the max
 
 ```
+
 Grouping by multiple variables
 
 ```{r}
@@ -189,6 +191,3 @@ ave_life_2002 %>%
 
 
 ```
-
-
-

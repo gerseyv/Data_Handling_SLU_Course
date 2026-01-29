@@ -1,0 +1,346 @@
+---
+title: "Patchwork_exercise"
+format: html
+editor: visual
+---
+
+In the previous sessions, you have worked with ggplot2 to create a variety of visualizations in R. Today's session introduces the R package **patchwork**, which provides a simple and intuitive way to combine multiple ggplot objects into a single figure.
+
+During the lecture, we will see how patchwork can be used to arrange plots side by side, stack them vertically, and create more complex layouts with minimal additional code.
+
+You can follow along during the lecture, recreate the examples, and try small modifications to the code.
+
+In this session, we will work with the palmerpenguins dataset, which contains measurements of penguins from three species collected on islands in the Palmer Archipelago, Antarctica. The dataset includes variables such as bill length, bill depth, flipper length, body mass, and sex, and works nicely for practicing data visualization and analysis.
+
+## Required `Packages`
+
+```{r}
+#| echo: true
+#| warning: false
+library(tidyverse) # data wrangling & plotting
+library(patchwork) # multiple plot alignment
+library(ggplot2)
+#install.packages("palmerpenguins")
+library(palmerpenguins) # Penguins data
+#data("penguins")
+
+#remove.packages("ggplot2") #had to remove ggplot2, restart R and reinstall it so & could work
+#install.packages("remotes")
+#install.packages("ggplot2")
+#library(remotes)
+#packageVersion("rlang")
+#remotes::install_version("rlang", "1.1.7")
+#remove.packages("rlang") #geom_point was not working so I had to remove rlang, restart Rstudio and install it again 
+#remotes::install_version("ggplot2", "3.5.2")
+
+```
+
+Combining two or more `ggplot2` plots is a common task when creating figures. Several R packages can help with this, offering easy ways to arrange plots next to each other, adjust their relative widths and heights, or place one plot inside another as an inset. Below, you’ll find a few alternative options for combining plots.
+
+During the session, we will create four ggplot objects:
+
+1.  a scatter plot,
+2.  a bar plot,
+3.  a line plot, and
+4.  a boxplot.
+
+Using these plots, we can test how to combine different plot types with patchwork.
+
+```{r}
+#| code-line-numbers: "1-2"
+#| echo: true
+p <- ggplot(penguins, aes(x=flipper_length_mm, y=body_mass_g,color=species)) + geom_point()
+q <- ggplot(penguins, aes(x=year, y=body_mass_g, fill=species)) + geom_bar(stat="identity")
+r <- ggplot(penguins, aes(x=flipper_length_mm, y=body_mass_g,color=species)) + geom_line()
+s <- ggplot(penguins, aes(x=flipper_length_mm, y=body_mass_g,color=species)) + geom_boxplot()
+```
+
+## Combining Plots: horizontally
+
+```{r}
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+p + q 
+```
+
+```{r}
+#| code-line-numbers: "1-2"
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+p | q # pipe, specifies that the other graph goes beside
+```
+
+::: callout-note
+### Combining plots with patchwork
+
+When using **patchwork** to combine `ggplot2` plots, different operators control how the plots are arranged:
+
+-   `p + q` adds plots to the layout and lets patchwork decide how to arrange them.
+-   `p | q` places plots next to each other in a single row (left to right).
+
+In simple cases, `p + q` and `p | q` may look the same, but using the pipe, `|`, makes your layout choice explicit and easier to understand.
+:::
+
+## Combining Plots: vertically
+
+To explicitely stack two plots on top of each other, you can use the slash `/`:
+
+```{r}
+##| fig-height: 3
+##| fig-width: 8
+#| echo: true
+#| warning: false
+p / q # slash
+```
+
+## Building more complex figures
+
+One of the strengths of **patchwork** is that simple operators can be combined to create more complex layouts. For example:
+
+```{r}
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+(p | q) / r
+```
+
+Here, `p` and `q` are first placed next to each other using `|`. The result is then combined with `r` using `/`, which stacks `r` **below** the first row. By grouping plots with parentheses, you can control how patchwork interprets the layout.
+
+By combining operators like `|`, `/`, and `+`, you can gradually build up more complex figures from simple pieces, without needing to learn a separate layout language. This makes it easy to experiment with different arrangements and clearly communicate your results:
+
+```{r}
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+(p | q | r) / s
+```
+
+**Quiztime:** So how would the following plot look like?
+
+```{r}
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+#| output: false
+p + q + r + s 
+#p | q | r | s #all in one row
+
+```
+
+::: {.callout-tip collapse="true"}
+```{r}
+#| fig-height: 3
+#| fig-width: 8
+#| echo: false
+#| warning: false
+p + q + r + s 
+```
+:::
+
+## Adding labels to plots
+
+Patchwork also makes it easy to add labels to your combined figures. For example:
+
+```{r}
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+p + q + r + s + 
+    plot_annotation(tag_levels = 'A')
+```
+
+This adds automatic tags (`a`, `b`, `c`, `d`) to each plot in the order they appear in the layout. These labels are useful when referring to specific panels in a report, presentation, or figure caption.
+
+**You don’t need to label each plot manually** — patchwork takes care of the numbering for you.
+
+::: callout-note
+# Try it yourself!
+
+How do you think you can change the labels from letters to numbers? To uppercase letters?
+:::
+
+## Figure titles
+
+You can add figure titles:
+
+```{r}
+#| code-line-numbers: "1-4"
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+p + q + r + s +
+    plot_annotation(tag_levels = 'a',
+        title = "Combined Plot Example", 
+        subtitle = "Using patchwork")
+```
+
+## Collecting legends
+
+When you combine multiple plots, each plot may come with its own legend. This can make the final figure look repetitive or cluttered. Patchwork allows you to **collect shared legends into a single guide**.
+
+```{r}
+#| code-line-numbers: "1-5"
+#| fig-height: 4
+#| fig-width: 8
+#| echo: true
+#| warning: false
+p + q + r + s +
+    plot_annotation(tag_levels = 'a',
+        title = "Combined Plot Example", 
+        subtitle = "Using patchwork")+ 
+    plot_layout(guides = 'collect') 
+
+#to make only one legend you can just not plot the legends in the original ggplots (q, r and s)
+
+```
+
+The `guides = "collect"` option gathers matching legends from all plots and displays them only once in the combined figure. This helps keep your figure clean and easier to read.
+
+::: callout-note
+What to watch out for:
+
+-   Legends are only collected if the aesthetics match (for example, the same variable mapped to color or fill).
+-   If plots use different scales or different variables for the same aesthetic, patchwork will keep separate legends.
+-   Small differences in how aesthetics are defined can prevent legends from being collected, even if the plots look similar.
+
+If the legends are not collected as expected, check that the same variables and scales are used across plots.
+:::
+
+## Change theme
+
+You can change the theme of the combined plot, just like you would for an individual plot.
+
+```{r}
+#| code-line-numbers: "1-8,"
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+p + q + r + s + 
+    plot_annotation(tag_levels = 'a',
+        title = "Combined Plot Example", 
+        subtitle = "Using patchwork") + 
+    plot_layout(guides = 'collect')+ 
+    theme_minimal()
+```
+
+## Abu's script for `Journal: BMC`
+
+```{r}
+#| echo: true
+#| warning: false
+p + q + r + s + 
+    plot_annotation(tag_levels = list(c('a','c','b','d'))) + 
+    plot_layout(widths = c(2, 2)) &
+    theme(legend.position = "right", 
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 8), 
+        legend.key.size = unit(0.2, 'cm'), 
+        plot.tag = element_text(size = 14,face = 'bold')) 
+
+
+```
+
+## Adding inset plots
+
+Patchwork also allows you to place one plot *inside* another plot as an inset. This can be useful when you want to highlight a subset of the data or show a related view without creating a separate panel.
+
+```{r}
+#| fig-height: 3
+#| fig-width: 8
+#| echo: true
+#| warning: false
+p + inset_element(q, 0.01, 0.59, 0.5, 0.9)
+```
+
+In this example, `q` is added as an inset inside plot `p`. The four numbers define the position of the inset, as **proportions of the main plot area**:
+
+-   the first two values control the horizontal placement (left and right),
+-   the last two values control the vertical placement (bottom and top).
+
+By adjusting these values, you can move and resize the inset plot to fit your figure.
+
+## Does patchwork work with base R plots?
+
+No. **Patchwork only works with `ggplot2` plots.**\
+This is because patchwork combines plots by working with `ggplot` objects behind the scenes.
+
+Base R plots (created with functions like `plot()`, `hist()`, or `boxplot()`) are drawn directly to the graphics device and are not stored as objects in the same way. Because of this, patchwork cannot rearrange or combine them.
+
+### Workaround:
+
+We said that patchwork only works with `ggplot2` plots. That is *mostly* true — but there is a useful exception.
+
+```{r}
+#| echo: true
+#| warning: false
+old_par <- par(mar = c(0, 0, 0, 0), mgp = c(1, 0.25, 0),
+    bg = NA, cex.axis = 0.75, las = 1, tcl = -0.25)
+
+#install.packages("gridGraphics")
+plot_object <- p + ~plot(penguins$flipper_length_mm, penguins$body_mass_g, main = 'Base plot')
+plot_object
+```
+
+In this example, the base R plot is wrapped inside `~` (a formula). This tells patchwork to **capture the output of the base plot and treat it as a graphical object**, rather than a regular base plot.
+
+So patchwork is not combining base plots directly. Instead, it is embedding the base plot as an element inside a patchwork layout.
+
+::: callout-note
+-   The base plot is not a `ggplot` object and cannot be modified with `ggplot2` layers.
+-   You cannot easily collect legends or align axes between base plots and ggplots.
+-   This approach is useful for quick comparisons or demonstrations, but mixing plot systems can be limiting.
+:::
+
+## Saving plots
+
+Combined plots created with **patchwork** can be saved in the same way as regular `ggplot2` plots. Since a patchwork object behaves like a ggplot object, you can use `ggsave()`:
+
+```{r}
+#| eval: false
+#| echo: true
+
+ggsave("plot.tiff",plot_object,height=170,width=85,units="mm",dpi=300,type="cairo", device=tiff)
+# https://bmcmicrobiol.biomedcentral.com/submission-guidelines/preparing-your-manuscript#preparing+figures
+```
+
+This is the recommended approach for saving ggplot- and patchwork-based figures, especially for publication-quality output.
+
+It is also possible to save ggplot objects using base R graphics devices:
+
+```{r}
+#| eval: false
+#| echo: true
+
+png("plot.tiff",height=170,width=85,units="mm",res=300)
+print(p)
+dev.off()
+```
+
+Here, print(p) is required to draw the ggplot object to the graphics device.
+
+::: callout-note
+-   `ggsave()` automatically uses the size and resolution you specify and is usually the easiest option.
+-   When using base graphics devices (`png()`, `tiff()`), you must call `print()` for ggplot or patchwork objects.
+-   Patchwork figures are saved as a single plot, just like any other ggplot object.
+-   Always check journal or report guidelines for required file formats, sizes, and resolution.
+:::
+
+## Documentation and help:
+
+-   [**patchwork**](https://patchwork.data-imaginist.com/) documentation
+-   [Getting Started](https://patchwork.data-imaginist.com/articles/patchwork.html)
+-   [Assembling Plots](https://patchwork.data-imaginist.com/articles/guides/assembly.html)
+-   [Defining Layouts](https://patchwork.data-imaginist.com/articles/guides/layout.html)
+-   [Adding Annotation](https://patchwork.data-imaginist.com/articles/guides/annotation.html)
+-   [Aligning across pages](https://patchwork.data-imaginist.com/articles/guides/multipage.html)
+-   [**chatgpt**]()
